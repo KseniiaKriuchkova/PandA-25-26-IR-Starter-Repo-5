@@ -13,12 +13,6 @@ Students should *carry over* their working logic from Part 4 (the search-mode ex
 python -m part5.app
 ```
 
-## Check against the transcript
-
-```bash
-python -m part5.tests.check_transcript
-```
-
 ## What to implement (ToDos)
 
 - **ToDo 0** — *Search mode (carry-over from Exercise 4)*:
