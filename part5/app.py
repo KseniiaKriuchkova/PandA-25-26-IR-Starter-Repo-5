@@ -129,7 +129,10 @@ def load_sonnets() -> List[Dict[str, object]]:
       - Use json.load(fileobj)
     """
     # BEGIN
-    return {}
+    filename_sonnets = module_relative_path("sonnets.json")
+    with open(filename_sonnets, "r", encoding="utf-8") as file:
+        sonnets = json.load(file)
+    return sonnets
     # END
 
 CONFIG_DEFAULTS = { "highlight": True, "search_mode": "AND" }
@@ -144,7 +147,15 @@ def load_config() -> Dict[str, object]:
       - If it exists, JSON-decode it and validate keys, falling back to the defaults in CONFIG_DEFAULTS for missing keys.
     """
     # BEGIN
-    return dict(CONFIG_DEFAULTS)
+    filename_config = module_relative_path("config.json")
+    if os.path.exists(filename_config):
+        with open(filename_config, "r", encoding="utf-8") as file:
+            config = json.load(file)
+            updated_config = CONFIG_DEFAULTS.copy()
+            updated_config.update(config)
+            return dict(updated_config)
+    else:
+        return dict(CONFIG_DEFAULTS)
     # END
 
 def save_config(cfg: Dict[str, object]) -> None:
@@ -156,7 +167,9 @@ def save_config(cfg: Dict[str, object]) -> None:
       - Use indent=2 and ensure_ascii=False
     """
     # BEGIN
-    pass
+    filename_config = module_relative_path("config.json")
+    with open(filename_config, "w", encoding="utf-8") as file:
+        json.dump(cfg, file, indent=2, ensure_ascii=False)
     # END
 
 def main() -> None:
@@ -192,12 +205,20 @@ def main() -> None:
                     config["highlight"] = (parts[1].lower() == "on")
                     print("Highlighting", "ON" if config["highlight"] else "OFF")
                     # ToDo 3: Use save_config(...) to write the config.json file when the highlight setting changes
+                    save_config(config)
                 else:
                     print("Usage: :highlight on|off")
                 continue
 
             # ToDo 0 - Copy (and adapt) your implementation of the search mode CLI from part 4 of the exercise
-
+            if raw.startswith(":search-mode"):
+                parts = raw.split()
+                if len(parts) == 2 and parts[1].lower() in ("and", "or"):
+                    config["search_mode"] = (parts[1].upper())
+                    print("Search mode set to", config["search_mode"])
+                else:
+                    print("Usage: :search-mode AND|OR")
+                continue
             print("Unknown command. Type :help for commands.")
             continue
 
@@ -227,6 +248,11 @@ def main() -> None:
                             combined_results[i] = combine_results(combined_result, result)
                         else:
                             # Not in both. No match!
+                            combined_result["matches"] = 0
+                    elif config["search_mode"] == "OR":
+                        if combined_result["matches"] > 0 or result["matches"] > 0:
+                            combined_results[i] = combine_results(combined_result, result)
+                        else:
                             combined_result["matches"] = 0
 
         print_results(raw, combined_results, bool(config["highlight"]))
