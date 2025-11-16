@@ -150,12 +150,9 @@ def load_config() -> Dict[str, object]:
     filename_config = module_relative_path("config.json")
     if os.path.exists(filename_config):
         with open(filename_config, "r", encoding="utf-8") as file:
-            config = json.load(file)
-            updated_config = CONFIG_DEFAULTS.copy()
-            updated_config.update(config)
-            return dict(updated_config)
+            return CONFIG_DEFAULTS | json.load(file)
     else:
-        return dict(CONFIG_DEFAULTS)
+        return CONFIG_DEFAULTS.copy()
     # END
 
 def save_config(cfg: Dict[str, object]) -> None:
